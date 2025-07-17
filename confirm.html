@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <title>圖片生成中</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 2rem;
+            text-align: center
+        }
+
+        #progressBarOuter {
+            width: 80%;
+            height: 20px;
+            background: #eee;
+            margin: 2rem auto;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        #progressBar {
+            height: 100%;
+            width: 0%;
+            background: #4caf50;
+            transition: width 0.5s;
+        }
+
+        .spinner {
+            margin-top: 1rem;
+            animation: spin 1s linear infinite;
+            border: 4px solid #ccc;
+            border-top-color: #007bff;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: inline-block;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <h1>系統架構圖生成中</h1>
+    <p id="status">開始處理...</p>
+    <div id="progressBarOuter">
+        <div id="progressBar"></div>
+    </div>
+    <div class="spinner"></div>
+    <div id="result"></div>
+
+    <script>
+        const query = new URLSearchParams(window.location.search);
+        const prefix = query.get("prefix");
+        const executionArn = query.get("executionArn");
+        const fileName = "diagram.png";
+        const bucket = "system-form-storage-2585-3053-5150";
+        const region = "ap-northeast-1";
+        const progressAPI = "https://your-api.amazonaws.com/prod/progress"; // 改成你的 API Gateway endpoint
+
+        const s3Url = `https://${bucket}.s3.${region}.amazonaws.com/${prefix}${fileName}`;
+        let tries = 0;
+        const maxTries = 40;
+
+        const poll = async () => {
+            // 查進度
+            try {
+                const resp = await fetch(`${progressAPI}?executionArn=${encodeURIComponent(executionArn)}`);
+                const json = await resp.json();
+                document.getElementById("status").textContent = `目前處理步驟：${json.name}`;
+                document.getElementById("progressBar").style.width = `${json.percentage}%`;
+            } catch (err) {
+                console.warn("進度查詢失敗", err);
+            }
+
+            // 查圖片
+            try {
+                const res = await fetch(s3Url, { method: 'HEAD' });
+                if (res.ok) {
+                    document.querySelector(".spinner").style.display = "none";
+                    document.getElementById("status").textContent = "✅ 架構圖已完成";
+                    document.getElementById("progressBar").style.width = "100%";
+                    document.getElementById("result").innerHTML = `<img src="${s3Url}" style="max-width:90%;margin-top:2rem">`;
+                    return;
+                }
+            } catch (err) { }
+
+            // 若未完成，繼續輪詢
+            tries++;
+            if (tries < maxTries) {
+                setTimeout(poll, 6000);
+            } else {
+                document.querySelector(".spinner").style.display = "none";
+                document.getElementById("status").textContent = "⚠ 等待逾時，請稍後手動重新整理頁面";
+            }
+        };
+
+        poll();
+    </script>
+</body>
+
+</html>

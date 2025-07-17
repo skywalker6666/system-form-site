@@ -1,7 +1,7 @@
 // ========= script.js =========
 const API_URL = 'https://84l1zi5hjc.execute-api.ap-northeast-1.amazonaws.com/submit';
 
-const form      = document.getElementById('awsForm');
+const form = document.getElementById('awsForm');
 const submitBtn = document.getElementById('submitBtn');
 
 /* ---------- 動態欄位顯示邏輯 (略，與之前相同) ---------- */
@@ -16,7 +16,7 @@ function toggleOtherSelect(selectEl, otherInputName) {
 
 function toggleOtherCheckbox(groupName, otherInputName) {
   const otherCheckbox = form.querySelector(`input[name="${groupName}"][value="other"]`);
-  const otherInput    = form.querySelector(`[name="${otherInputName}"]`);
+  const otherInput = form.querySelector(`[name="${otherInputName}"]`);
   if (!otherCheckbox || !otherInput) return;
   const isChecked = otherCheckbox.checked;
   otherInput.classList.toggle('hidden', !isChecked);
@@ -27,8 +27,8 @@ function toggleOtherCheckbox(groupName, otherInputName) {
 form.addEventListener('change', e => {
   const { name } = e.target;
   if (name === 'deployment_location') toggleOtherSelect(e.target, 'deployment_location_other');
-  if (name === 'web_server_type')     toggleOtherSelect(e.target, 'web_server_type_other');
-  if (name === 'db_type')             toggleOtherSelect(e.target, 'db_type_other');
+  if (name === 'web_server_type') toggleOtherSelect(e.target, 'web_server_type_other');
+  if (name === 'db_type') toggleOtherSelect(e.target, 'db_type_other');
 
   if (name === 'os_types' || name === 'programming_languages') {
     toggleOtherCheckbox('os_types', 'os_types_other');
@@ -105,13 +105,14 @@ form.addEventListener('submit', async e => {
 
   try {
     const resp = await fetch(API_URL, {
-      method : 'POST',
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body   : JSON.stringify(payload)
+      body: JSON.stringify(payload)
     });
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const data = await resp.json();
     alert(`提交成功！\nKey: ${data.key || 'n/a'}`);
+    window.location.href = `confirm.html?prefix=${encodeURIComponent(data.prefix)}&executionArn=${encodeURIComponent(data.executionArn)}`;
     form.reset();
   } catch (err) {
     console.error(err);
