@@ -97,7 +97,7 @@
             // 若未完成，繼續輪詢
             tries++;
             if (tries < maxTries) {
-                setTimeout(poll, 6000);
+                setTimeout(poll, 3000);
             } else {
                 document.querySelector(".spinner").style.display = "none";
                 document.getElementById("status").textContent = "⚠ 等待逾時，請稍後手動重新整理頁面";
