@@ -49,6 +49,7 @@
 <body>
     <h1>系統架構圖生成中</h1>
     <p id="status">開始處理...</p>
+    <p id="percentText">進度：0%</p>
     <div id="progressBarOuter">
         <div id="progressBar"></div>
     </div>
@@ -75,6 +76,8 @@
                 const json = await resp.json();
                 document.getElementById("status").textContent = `目前處理步驟：${json.name}`;
                 document.getElementById("progressBar").style.width = `${json.percentage}%`;
+                document.getElementById("percentText").textContent = `進度：${json.percentage}%`;
+
             } catch (err) {
                 console.warn("進度查詢失敗", err);
             }
